@@ -17,6 +17,7 @@
 package com.shub39.grit.widgets.habit_overview_widget
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,6 +32,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
@@ -171,8 +173,17 @@ private fun Content(
                         )
                     }
                 )
-                .clickable(actionStartActivity<MainActivity>())
+                .clickable(
+                    androidx.glance.appwidget.action.actionStartActivity(
+                        Intent(LocalContext.current, MainActivity::class.java).apply {
+                            putExtra("start_section", "Habits")
+                        }
+                    )
+                )
     ) {
+        // onUpdateWidget parameter kept on the Content signature; widget refresh plumbing
+        // (provideGlance → scope.launch { update(context, id) }) remains intact for future use.
+
         TitleBar(
             startIcon = ImageProvider(R.drawable.alarm),
             title = "Habits",
@@ -182,18 +193,7 @@ private fun Content(
                     style = TextStyle(color = GlanceTheme.colors.onSurface),
                 )
 
-                if (size.width >= WidgetSize.Width4) {
-                    Box(GlanceModifier.padding(horizontal = 16.dp)) {
-                        Image(
-                            provider = ImageProvider(R.drawable.refresh),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface),
-                            modifier = GlanceModifier.clickable { onUpdateWidget() },
-                        )
-                    }
-                } else {
-                    Spacer(modifier = GlanceModifier.width(16.dp))
-                }
+                Spacer(modifier = GlanceModifier.width(16.dp))
             },
         )
 

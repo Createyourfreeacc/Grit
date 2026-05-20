@@ -16,6 +16,7 @@
  */
 package com.shub39.grit.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -24,6 +25,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +36,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shub39.grit.core.data.GritNotificationManager.Companion.createNotificationChannel
 import com.shub39.grit.core.data.Utils
+import com.shub39.grit.core.domain.Sections
 import com.shub39.grit.core.presentation.component.InitialLoading
 import com.shub39.grit.core.theme.GritTheme
 import com.shub39.grit.core.utils.LocalWindowSizeClass
@@ -42,6 +45,20 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : FragmentActivity() {
     private val mainViewModel: MainViewModel by viewModel()
+    private lateinit var requestedSection: MutableState<Sections?>
+
+    private fun readSection(intent: Intent?): Sections? =
+        intent?.getStringExtra("start_section")?.let { name ->
+            runCatching { Sections.valueOf(name) }.getOrNull()
+        }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        readSection(intent)?.let {
+            if (::requestedSection.isInitialized) requestedSection.value = it
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +68,8 @@ class MainActivity : FragmentActivity() {
         createNotificationChannel(this)
 
         setContent {
+            requestedSection = remember { mutableStateOf(readSection(intent)) }
+            val initialSection = requestedSection.value
             val windowSizeClass = calculateWindowSizeClass(this)
 
             CompositionLocalProvider(LocalWindowSizeClass provides windowSizeClass) {
@@ -85,6 +104,7 @@ class MainActivity : FragmentActivity() {
                             state = state,
                             onRefreshSub = { mainViewModel.updateSubscription() },
                             onDismissChangelog = { mainViewModel.dismissChangelog() },
+                            initialSection = initialSection,
                         )
                     } else {
                         InitialLoading()

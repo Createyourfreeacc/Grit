@@ -17,6 +17,7 @@
 package com.shub39.grit.widgets.all_tasks_widget
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,6 +32,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
@@ -159,7 +161,13 @@ private fun Content(
                         )
                     }
                 )
-                .clickable(actionStartActivity<MainActivity>())
+                .clickable(
+                    androidx.glance.appwidget.action.actionStartActivity(
+                        Intent(LocalContext.current, MainActivity::class.java).apply {
+                            putExtra("start_section", "Tasks")
+                        }
+                    )
+                )
     ) {
         TitleBar(
             startIcon = ImageProvider(R.drawable.check_list),

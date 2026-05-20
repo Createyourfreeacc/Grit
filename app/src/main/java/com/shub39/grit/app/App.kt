@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -106,7 +107,12 @@ private sealed interface AppSections : NavKey {
 }
 
 @Composable
-fun App(state: MainAppState, onRefreshSub: () -> Unit, onDismissChangelog: () -> Unit) {
+fun App(
+    state: MainAppState,
+    onRefreshSub: () -> Unit,
+    onDismissChangelog: () -> Unit,
+    initialSection: Sections? = null,
+) {
     val mainBackStack = rememberNavBackStack(GlobalRoutes.App)
 
     // Startup warning + changelog popups disabled for personal fork.
@@ -132,11 +138,25 @@ fun App(state: MainAppState, onRefreshSub: () -> Unit, onDismissChangelog: () ->
 
                     val appBackStack =
                         rememberNavBackStack(
-                            when (state.startingSection) {
+                            when (initialSection ?: state.startingSection) {
                                 Sections.Tasks -> AppSections.TaskPages
                                 Sections.Habits -> AppSections.HabitsPages
                             }
                         )
+
+                    // Switch sections when a widget tap delivers a new intent on a running app.
+                    LaunchedEffect(initialSection) {
+                        val target =
+                            when (initialSection) {
+                                Sections.Tasks -> AppSections.TaskPages
+                                Sections.Habits -> AppSections.HabitsPages
+                                null -> null
+                            }
+                        if (target != null && appBackStack.lastOrNull() != target) {
+                            appBackStack.removeAll { it == target }
+                            appBackStack.add(target)
+                        }
+                    }
 
                     when (windowSizeClass.widthSizeClass) {
                         WindowWidthSizeClass.Compact -> {

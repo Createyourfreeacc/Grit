@@ -49,14 +49,15 @@ object Converters {
     @TypeConverter
     fun daysOfMonthFromString(value: String): Set<Int> {
         return if (value.isBlank()) emptySet()
-        else value.split(",").map { it.toInt() }.toSet()
+        else value.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
     }
 
     @TypeConverter
     fun scheduleTypeToString(value: ScheduleType): String = value.name
 
     @TypeConverter
-    fun scheduleTypeFromString(value: String): ScheduleType = ScheduleType.valueOf(value)
+    fun scheduleTypeFromString(value: String): ScheduleType =
+        ScheduleType.entries.find { it.name == value } ?: ScheduleType.WEEKLY
 
     @OptIn(ExperimentalTime::class)
     @TypeConverter

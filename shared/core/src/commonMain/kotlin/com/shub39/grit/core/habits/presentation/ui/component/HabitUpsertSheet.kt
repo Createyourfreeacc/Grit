@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -65,6 +66,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -131,6 +133,7 @@ fun HabitUpsertSheetContent(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
+    val maxScrollableHeight = (LocalConfiguration.current.screenHeightDp * 0.7f).dp
 
     var timePickerDialog by remember { mutableStateOf(false) }
 
@@ -190,7 +193,7 @@ fun HabitUpsertSheetContent(
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .weight(1f, fill = false)
+                    .heightIn(max = maxScrollableHeight)
                     .verticalScroll(rememberScrollState())
                     .clip(MaterialTheme.shapes.large)
                     .padding(16.dp),

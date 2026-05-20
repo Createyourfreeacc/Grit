@@ -56,7 +56,8 @@ class MainViewModel(
             .asStateFlow()
             .onStart {
                 checkSubscription()
-                checkChangelog()
+                // checkChangelog() disabled in personal fork — the startup popup was
+                // removed in App.kt. Method retained for possible future re-enable.
                 observeDatastore()
             }
             .stateIn(

@@ -53,7 +53,8 @@ fun HabitSchema.toHabit(): Habit {
         time = Instant.fromEpochMilliseconds(time).toLocalDateTime(TimeZone.currentSystemDefault()),
         days = Converters.dayOfWeekFromString(days),
         reminder = reminder,
-        scheduleType = ScheduleType.valueOf(scheduleType),
+        scheduleType =
+            ScheduleType.entries.find { it.name == scheduleType } ?: ScheduleType.WEEKLY,
         daysOfMonth = Converters.daysOfMonthFromString(daysOfMonth),
     )
 }
