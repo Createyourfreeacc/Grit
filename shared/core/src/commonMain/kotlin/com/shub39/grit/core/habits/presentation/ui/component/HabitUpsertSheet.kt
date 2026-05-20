@@ -22,16 +22,16 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -187,13 +187,17 @@ fun HabitUpsertSheetContent(
             )
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large),
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .clip(MaterialTheme.shapes.large)
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(16.dp),
         ) {
-            item {
+            run {
                 OutlinedTextField(
                     state = titleTextFieldState,
                     lineLimits = TextFieldLineLimits.SingleLine,
@@ -221,7 +225,7 @@ fun HabitUpsertSheetContent(
                 )
             }
 
-            item {
+            run {
                 OutlinedTextField(
                     state = descTextFieldState,
                     lineLimits = TextFieldLineLimits.SingleLine,
@@ -244,7 +248,7 @@ fun HabitUpsertSheetContent(
                 )
             }
 
-            item {
+            run {
                 Spacer(modifier = Modifier.height(4.dp))
                 val hasSchedule =
                     newHabit.days.isNotEmpty() || newHabit.daysOfMonth.isNotEmpty()
@@ -330,28 +334,60 @@ fun HabitUpsertSheetContent(
                                     }
                                 }
                             } else {
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                Column(
                                     verticalArrangement = Arrangement.spacedBy(4.dp),
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    (1..31).forEach { day ->
-                                        ToggleButton(
-                                            checked = newHabit.daysOfMonth.contains(day),
-                                            onCheckedChange = { checked ->
-                                                updateHabit(
-                                                    newHabit.copy(
-                                                        daysOfMonth =
-                                                            if (checked)
-                                                                newHabit.daysOfMonth + day
-                                                            else newHabit.daysOfMonth - day
-                                                    )
-                                                )
-                                            },
-                                            colors =
-                                                ToggleButtonDefaults.tonalToggleButtonColors(),
-                                            content = { Text(text = day.toString()) },
-                                        )
+                                    val totalDays = 31
+                                    val cols = 7
+                                    val rows = (totalDays + cols - 1) / cols
+                                    repeat(rows) { rowIdx ->
+                                        Row(
+                                            horizontalArrangement =
+                                                Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            repeat(cols) { colIdx ->
+                                                val day = rowIdx * cols + colIdx + 1
+                                                Box(modifier = Modifier.weight(1f)) {
+                                                    if (day in 1..totalDays) {
+                                                        ToggleButton(
+                                                            checked =
+                                                                newHabit.daysOfMonth.contains(day),
+                                                            onCheckedChange = { checked ->
+                                                                updateHabit(
+                                                                    newHabit.copy(
+                                                                        daysOfMonth =
+                                                                            if (checked)
+                                                                                newHabit.daysOfMonth +
+                                                                                    day
+                                                                            else
+                                                                                newHabit.daysOfMonth -
+                                                                                    day
+                                                                    )
+                                                                )
+                                                            },
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            colors =
+                                                                ToggleButtonDefaults
+                                                                    .tonalToggleButtonColors(),
+                                                            contentPadding =
+                                                                PaddingValues(
+                                                                    horizontal = 0.dp,
+                                                                    vertical = 8.dp,
+                                                                ),
+                                                            content = {
+                                                                Text(
+                                                                    text = day.toString(),
+                                                                    maxLines = 1,
+                                                                    softWrap = false,
+                                                                )
+                                                            },
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -426,24 +462,31 @@ fun HabitUpsertSheetContent(
                     }
                 }
             }
-        }
 
-        Button(
-            onClick = {
-                onUpsertHabit(
-                    newHabit.copy(
-                        title = titleTextFieldState.text.toString(),
-                        description = descTextFieldState.text.toString(),
+            run {
+                Button(
+                    onClick = {
+                        onUpsertHabit(
+                            newHabit.copy(
+                                title = titleTextFieldState.text.toString(),
+                                description = descTextFieldState.text.toString(),
+                            )
+                        )
+                        onDismissRequest()
+                    },
+                    modifier = Modifier.padding(top = 8.dp, bottom = 16.dp).fillMaxWidth(),
+                    enabled =
+                        titleTextFieldState.text.length <= 20 &&
+                            titleTextFieldState.text.isNotBlank(),
+                ) {
+                    Text(
+                        text =
+                            stringResource(
+                                if (isEditSheet) Res.string.save else Res.string.add_habit
+                            )
                     )
-                )
-                onDismissRequest()
-            },
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp).fillMaxWidth(),
-            enabled =
-                titleTextFieldState.text.length <= 20 &&
-                    titleTextFieldState.text.isNotBlank(),
-        ) {
-            Text(text = stringResource(if (isEditSheet) Res.string.save else Res.string.add_habit))
+                }
+            }
         }
 
         if (timePickerDialog) {
