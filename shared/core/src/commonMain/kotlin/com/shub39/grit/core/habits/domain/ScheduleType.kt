@@ -14,19 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.shub39.grit.habits.data.database
+package com.shub39.grit.core.habits.domain
 
-import android.content.Context
-import androidx.room3.Room
-import androidx.room3.RoomDatabase
-import org.koin.core.annotation.Single
-
-@Single
-class HabitDbFactory(private val context: Context) {
-    fun create(): RoomDatabase.Builder<HabitDatabase> {
-        val appContext = context.applicationContext
-
-        return Room.databaseBuilder(appContext, HabitDatabase::class.java, HabitDatabase.DB_NAME)
-            .addMigrations(HabitDatabase.migrate_3_4, HabitDatabase.migrate_5_6)
-    }
+enum class ScheduleType {
+    WEEKLY,
+    MONTHLY,
 }

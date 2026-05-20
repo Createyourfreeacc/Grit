@@ -50,6 +50,7 @@ import com.shub39.grit.core.habits.domain.HabitStatus
 import com.shub39.grit.core.habits.domain.HabitWithAnalytics
 import com.shub39.grit.core.habits.domain.StreakPosition
 import com.shub39.grit.core.habits.domain.calendarMapStreakShape
+import com.shub39.grit.core.habits.domain.matches
 import com.shub39.grit.core.habits.presentation.HabitsAction
 import com.shub39.grit.core.habits.presentation.daysStartingFrom
 import com.shub39.grit.core.shared_ui.endItemShape
@@ -143,7 +144,7 @@ fun CalendarMap(
                 if (day.position.name == "MonthDate") {
                     val done = day.date in doneDates
                     val validDate =
-                        day.date <= today && day.date.dayOfWeek in currentHabit.habit.days
+                        day.date <= today && currentHabit.habit.matches(day.date)
 
                     val donePrevious = day.date.minusDays(1) in doneDates
                     val doneAfter = day.date.plusDays(1) in doneDates

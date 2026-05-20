@@ -25,6 +25,8 @@ import android.util.Log
 import com.shub39.grit.core.domain.AlarmScheduler
 import com.shub39.grit.core.domain.IntentActions
 import com.shub39.grit.core.habits.domain.Habit
+import com.shub39.grit.core.habits.domain.ScheduleType
+import com.shub39.grit.core.habits.domain.matches
 import com.shub39.grit.core.tasks.domain.Task
 import com.shub39.grit.core.utils.now
 import kotlin.time.ExperimentalTime
@@ -48,12 +50,16 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
 
     override fun schedule(habit: Habit) {
         cancel(habit)
-        if (!habit.reminder || habit.days.isEmpty()) return
+        val noSchedule = when (habit.scheduleType) {
+            ScheduleType.WEEKLY -> habit.days.isEmpty()
+            ScheduleType.MONTHLY -> habit.daysOfMonth.isEmpty()
+        }
+        if (!habit.reminder || noSchedule) return
 
         var scheduleTime = habit.time
         val now = LocalDateTime.now()
 
-        while ((scheduleTime < now) || !habit.days.contains(scheduleTime.dayOfWeek)) {
+        while ((scheduleTime < now) || !habit.matches(scheduleTime.date)) {
             scheduleTime =
                 scheduleTime.date.plus(1, DateTimeUnit.DAY).let {
                     LocalDateTime(date = it, time = scheduleTime.time)

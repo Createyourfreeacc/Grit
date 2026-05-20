@@ -17,6 +17,7 @@
 package com.shub39.grit.core.data
 
 import androidx.room3.TypeConverter
+import com.shub39.grit.core.habits.domain.ScheduleType
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
@@ -39,6 +40,23 @@ object Converters {
         return if (value.isBlank()) emptySet()
         else value.split(",").map { DayOfWeek.valueOf(it) }.toSet()
     }
+
+    @TypeConverter
+    fun daysOfMonthToString(value: Set<Int>): String {
+        return value.joinToString(",")
+    }
+
+    @TypeConverter
+    fun daysOfMonthFromString(value: String): Set<Int> {
+        return if (value.isBlank()) emptySet()
+        else value.split(",").map { it.toInt() }.toSet()
+    }
+
+    @TypeConverter
+    fun scheduleTypeToString(value: ScheduleType): String = value.name
+
+    @TypeConverter
+    fun scheduleTypeFromString(value: String): ScheduleType = ScheduleType.valueOf(value)
 
     @OptIn(ExperimentalTime::class)
     @TypeConverter

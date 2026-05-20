@@ -39,6 +39,8 @@ data class HabitSchema(
     val time: Long,
     val days: String,
     val reminder: Boolean,
+    val scheduleType: String = "WEEKLY",
+    val daysOfMonth: String = "",
 )
 
 @Serializable data class HabitStatusSchema(val id: Long = 0, val habitId: Long, val date: Long)

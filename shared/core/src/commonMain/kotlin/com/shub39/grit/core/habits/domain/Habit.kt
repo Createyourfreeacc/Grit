@@ -16,8 +16,11 @@
  */
 package com.shub39.grit.core.habits.domain
 
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.minus
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -29,4 +32,24 @@ data class Habit(
     val days: Set<DayOfWeek>,
     val index: Int,
     val reminder: Boolean,
+    val scheduleType: ScheduleType = ScheduleType.WEEKLY,
+    val daysOfMonth: Set<Int> = emptySet(),
 )
+
+fun Habit.matches(date: LocalDate): Boolean = when (scheduleType) {
+    ScheduleType.WEEKLY -> date.dayOfWeek in days
+    ScheduleType.MONTHLY -> date.dayOfMonth in daysOfMonth || overflowDayOnOrNull(date) != null
+}
+
+// If [date] is a rollover for a non-existent scheduled day in the previous month
+// (e.g. asked for the 31st in a 30-day month), return the original day-of-month.
+// Otherwise null. Monthly habits only.
+fun Habit.overflowDayOnOrNull(date: LocalDate): Int? {
+    if (scheduleType != ScheduleType.MONTHLY) return null
+    if (date.dayOfMonth > 3) return null
+    if (daysOfMonth.all { it <= 28 }) return null
+    val lastOfPrevMonth = LocalDate(date.year, date.month, 1).minus(1, DateTimeUnit.DAY)
+    val daysInPrev = lastOfPrevMonth.dayOfMonth
+    val wouldBe = daysInPrev + date.dayOfMonth
+    return if (wouldBe > daysInPrev && wouldBe in daysOfMonth) wouldBe else null
+}

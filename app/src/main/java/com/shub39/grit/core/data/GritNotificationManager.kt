@@ -56,7 +56,7 @@ class GritNotificationManager(private val context: Context) {
     private val notificationManager by lazy { NotificationManagerCompat.from(context) }
 
     // shows habit notification if permission granted
-    fun habitNotification(habit: Habit) {
+    fun habitNotification(habit: Habit, overflowDay: Int? = null) {
         Log.d(TAG, "Sending Habit Notification")
 
         val intent =
@@ -72,11 +72,20 @@ class GritNotificationManager(private val context: Context) {
                 PendingIntent.FLAG_IMMUTABLE,
             )
 
+        val body = if (overflowDay != null) {
+            val suffix = ordinalSuffix(overflowDay)
+            val prefix = "Would've been the $overflowDay$suffix"
+            if (habit.description.isBlank()) prefix else "$prefix · ${habit.description}"
+        } else {
+            habit.description
+        }
+
         val builder =
             NotificationCompat.Builder(context, "1")
                 .setSmallIcon(R.drawable.notif_icon)
                 .setContentTitle(habit.title)
-                .setContentText(habit.description)
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
                 .addAction(R.drawable.notif_icon, "Mark Done", pendingBroadcast)
@@ -129,5 +138,13 @@ class GritNotificationManager(private val context: Context) {
 
     fun cancelNotification(task: Task) {
         notificationManager.cancel(task.id.toInt() + TASK_NOTIF_ID_OFFSET)
+    }
+
+    private fun ordinalSuffix(n: Int): String = when {
+        n % 100 in 11..13 -> "th"
+        n % 10 == 1 -> "st"
+        n % 10 == 2 -> "nd"
+        n % 10 == 3 -> "rd"
+        else -> "th"
     }
 }

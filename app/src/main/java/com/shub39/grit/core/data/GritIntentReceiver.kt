@@ -25,6 +25,7 @@ import com.shub39.grit.core.domain.IntentActions
 import com.shub39.grit.core.domain.SettingsDatastore
 import com.shub39.grit.core.habits.domain.HabitRepo
 import com.shub39.grit.core.habits.domain.HabitStatus
+import com.shub39.grit.core.habits.domain.overflowDayOnOrNull
 import com.shub39.grit.core.tasks.domain.TaskRepo
 import com.shub39.grit.core.utils.now
 import kotlin.time.ExperimentalTime
@@ -131,11 +132,13 @@ class GritIntentReceiver : BroadcastReceiver(), KoinComponent {
         if (!habit.reminder) return
 
         // check if habit is completed today, if not then show notification
+        val today = LocalDate.now()
         val habitStatus = habitRepo.getStatusForHabit(habitId)
-        if (habitStatus.any { it.date == LocalDate.now() }) {
+        if (habitStatus.any { it.date == today }) {
             Log.d(TAG, "Habit already completed today")
         } else {
-            get<GritNotificationManager>().habitNotification(habit)
+            val overflowDay = habit.overflowDayOnOrNull(today)
+            get<GritNotificationManager>().habitNotification(habit, overflowDay)
         }
 
         get<AlarmScheduler>().schedule(habit)

@@ -19,6 +19,7 @@ package com.shub39.grit.core.data.backup
 import com.shub39.grit.core.data.Converters
 import com.shub39.grit.core.habits.domain.Habit
 import com.shub39.grit.core.habits.domain.HabitStatus
+import com.shub39.grit.core.habits.domain.ScheduleType
 import com.shub39.grit.core.tasks.domain.Category
 import com.shub39.grit.core.tasks.domain.Task
 import kotlin.time.ExperimentalTime
@@ -37,6 +38,8 @@ fun Habit.toHabitSchema(): HabitSchema {
         time = time.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
         days = Converters.dayOfWeekToString(days),
         reminder = reminder,
+        scheduleType = scheduleType.name,
+        daysOfMonth = Converters.daysOfMonthToString(daysOfMonth),
     )
 }
 
@@ -50,6 +53,8 @@ fun HabitSchema.toHabit(): Habit {
         time = Instant.fromEpochMilliseconds(time).toLocalDateTime(TimeZone.currentSystemDefault()),
         days = Converters.dayOfWeekFromString(days),
         reminder = reminder,
+        scheduleType = ScheduleType.valueOf(scheduleType),
+        daysOfMonth = Converters.daysOfMonthFromString(daysOfMonth),
     )
 }
 

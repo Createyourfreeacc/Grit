@@ -63,6 +63,7 @@ import com.shub39.grit.app.MainActivity
 import com.shub39.grit.core.habits.domain.Habit
 import com.shub39.grit.core.habits.domain.HabitRepo
 import com.shub39.grit.core.habits.domain.HabitStatus
+import com.shub39.grit.core.habits.domain.matches
 import com.shub39.grit.core.utils.now
 import com.shub39.grit.widgets.WidgetSize
 import kotlin.time.ExperimentalTime
@@ -87,10 +88,7 @@ class HabitOverviewWidget : GlanceAppWidget(), KoinComponent {
             key(size) {
                 GlanceTheme {
                     Content(
-                        habitsWithStatus =
-                            habits.filter {
-                                it.first.days.any { day -> day == LocalDate.now().dayOfWeek }
-                            },
+                        habitsWithStatus = habits.filter { it.first.matches(LocalDate.now()) },
                         onUpdateHabit = { habitWithStatus ->
                             scope.launch {
                                 if (habitWithStatus.second) {
@@ -203,7 +201,7 @@ private fun Content(
             modifier = GlanceModifier.fillMaxSize().padding(horizontal = 8.dp),
             horizontalAlignment = Alignment.Start,
         ) {
-            items(habitsWithStatus, itemId = { it.first.id }) { habitWithStatus ->
+            items(habitsWithStatus.sortedBy { it.second }, itemId = { it.first.id }) { habitWithStatus ->
                 Column {
                     Row(
                         modifier =

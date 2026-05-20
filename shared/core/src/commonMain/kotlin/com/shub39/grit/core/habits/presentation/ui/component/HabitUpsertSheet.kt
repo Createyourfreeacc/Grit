@@ -22,6 +22,7 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,6 +45,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -68,6 +72,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.shub39.grit.core.habits.domain.Habit
+import com.shub39.grit.core.habits.domain.ScheduleType
 import com.shub39.grit.core.shared_ui.GritBottomSheet
 import com.shub39.grit.core.shared_ui.GritTimePicker
 import com.shub39.grit.core.shared_ui.detachedItemShape
@@ -228,29 +233,25 @@ fun HabitUpsertSheetContent(
                         ),
                     modifier = Modifier.fillMaxWidth(),
                     label = {
-                        if (newHabit.description.length <= 50) {
-                            Text(
-                                text =
-                                    stringResource(
-                                        if (isEditSheet) Res.string.update_description
-                                        else Res.string.description
-                                    )
-                            )
-                        } else {
-                            Text(text = stringResource(Res.string.too_long))
-                        }
+                        Text(
+                            text =
+                                stringResource(
+                                    if (isEditSheet) Res.string.update_description
+                                    else Res.string.description
+                                )
+                        )
                     },
-                    isError = newHabit.description.length > 50,
                 )
             }
 
             item {
                 Spacer(modifier = Modifier.height(4.dp))
+                val hasSchedule =
+                    newHabit.days.isNotEmpty() || newHabit.daysOfMonth.isNotEmpty()
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Card(
                         shape =
-                            if (newHabit.days.isEmpty()) detachedItemShape()
-                            else leadingItemShape(),
+                            if (!hasSchedule) detachedItemShape() else leadingItemShape(),
                         modifier = Modifier.animateContentSize(),
                         colors =
                             CardDefaults.cardColors(
@@ -259,39 +260,105 @@ fun HabitUpsertSheetContent(
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                ScheduleType.entries.forEachIndexed { index, type ->
+                                    SegmentedButton(
+                                        selected = newHabit.scheduleType == type,
+                                        onClick = {
+                                            if (newHabit.scheduleType != type) {
+                                                updateHabit(
+                                                    newHabit.copy(
+                                                        scheduleType = type,
+                                                        days =
+                                                            if (type == ScheduleType.WEEKLY)
+                                                                newHabit.days
+                                                            else emptySet(),
+                                                        daysOfMonth =
+                                                            if (type == ScheduleType.MONTHLY)
+                                                                newHabit.daysOfMonth
+                                                            else emptySet(),
+                                                    )
+                                                )
+                                            }
+                                        },
+                                        shape =
+                                            SegmentedButtonDefaults.itemShape(
+                                                index = index,
+                                                count = ScheduleType.entries.size,
+                                            ),
+                                    ) {
+                                        Text(
+                                            text =
+                                                if (type == ScheduleType.WEEKLY) "Weekly"
+                                                else "Monthly"
+                                        )
+                                    }
+                                }
+                            }
+
                             Text(text = stringResource(Res.string.select_days))
 
-                            Row(
-                                horizontalArrangement =
-                                    Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-                            ) {
-                                DayOfWeek.entries.forEach { dayOfWeek ->
-                                    ToggleButton(
-                                        checked = newHabit.days.contains(dayOfWeek),
-                                        onCheckedChange = {
-                                            updateHabit(
-                                                newHabit.copy(
-                                                    days =
-                                                        if (it) {
-                                                            newHabit.days + dayOfWeek
-                                                        } else {
-                                                            newHabit.days - dayOfWeek
-                                                        }
+                            if (newHabit.scheduleType == ScheduleType.WEEKLY) {
+                                Row(
+                                    horizontalArrangement =
+                                        Arrangement.spacedBy(
+                                            ButtonGroupDefaults.ConnectedSpaceBetween
+                                        )
+                                ) {
+                                    DayOfWeek.entries.forEach { dayOfWeek ->
+                                        ToggleButton(
+                                            checked = newHabit.days.contains(dayOfWeek),
+                                            onCheckedChange = {
+                                                updateHabit(
+                                                    newHabit.copy(
+                                                        days =
+                                                            if (it) {
+                                                                newHabit.days + dayOfWeek
+                                                            } else {
+                                                                newHabit.days - dayOfWeek
+                                                            }
+                                                    )
                                                 )
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        colors = ToggleButtonDefaults.tonalToggleButtonColors(),
-                                        content = { Text(text = dayOfWeek.name.take(1)) },
-                                    )
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            colors =
+                                                ToggleButtonDefaults.tonalToggleButtonColors(),
+                                            content = { Text(text = dayOfWeek.name.take(1)) },
+                                        )
+                                    }
+                                }
+                            } else {
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    (1..31).forEach { day ->
+                                        ToggleButton(
+                                            checked = newHabit.daysOfMonth.contains(day),
+                                            onCheckedChange = { checked ->
+                                                updateHabit(
+                                                    newHabit.copy(
+                                                        daysOfMonth =
+                                                            if (checked)
+                                                                newHabit.daysOfMonth + day
+                                                            else newHabit.daysOfMonth - day
+                                                    )
+                                                )
+                                            },
+                                            colors =
+                                                ToggleButtonDefaults.tonalToggleButtonColors(),
+                                            content = { Text(text = day.toString()) },
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
 
-                    if (newHabit.days.isNotEmpty()) {
+                    if (hasSchedule) {
                         ListItem(
                             colors = listItemColors(),
                             modifier =
@@ -373,8 +440,7 @@ fun HabitUpsertSheetContent(
             },
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp).fillMaxWidth(),
             enabled =
-                descTextFieldState.text.length <= 50 &&
-                    titleTextFieldState.text.length <= 20 &&
+                titleTextFieldState.text.length <= 20 &&
                     titleTextFieldState.text.isNotBlank(),
         ) {
             Text(text = stringResource(if (isEditSheet) Res.string.save else Res.string.add_habit))

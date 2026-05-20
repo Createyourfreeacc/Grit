@@ -27,6 +27,7 @@ import com.shub39.grit.core.habits.domain.HabitRepo
 import com.shub39.grit.core.habits.domain.HabitStatus
 import com.shub39.grit.core.habits.domain.HabitWithAnalytics
 import com.shub39.grit.core.habits.domain.OverallAnalytics
+import com.shub39.grit.core.habits.domain.matches
 import com.shub39.grit.core.utils.now
 import com.shub39.grit.habits.data.database.HabitStatusDao
 import com.shub39.grit.habits.data.database.HabitsDao
@@ -107,8 +108,8 @@ class HabitRepository(
                         habit = habit,
                         statuses = habitStatusesForHabit,
                         currentStreak =
-                            countCurrentStreak(dates = dates, eligibleWeekdays = habit.days),
-                        bestStreak = countBestStreak(dates = dates, eligibleWeekdays = habit.days),
+                            countCurrentStreak(dates = dates, isScheduledOn = habit::matches),
+                        bestStreak = countBestStreak(dates = dates, isScheduledOn = habit::matches),
                         weeklyComparisonData =
                             prepareLineChartData(
                                 firstDay = firstDayOfWeek.value,

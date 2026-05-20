@@ -50,6 +50,7 @@ import com.shub39.grit.core.habits.domain.Habit
 import com.shub39.grit.core.habits.domain.HabitStatus
 import com.shub39.grit.core.habits.domain.StreakPosition
 import com.shub39.grit.core.habits.domain.heatMapStreakShape
+import com.shub39.grit.core.habits.domain.matches
 import com.shub39.grit.core.habits.presentation.HabitsAction
 import com.shub39.grit.core.habits.presentation.daysStartingFrom
 import com.shub39.grit.core.shared_ui.endItemShape
@@ -162,7 +163,7 @@ fun WeeklyBooleanHeatMap(
                         if (day.date > today) return@HeatMapCalendar
 
                         val done = day.date in doneDates
-                        val validDay = day.date.dayOfWeek in habit.days
+                        val validDay = habit.matches(day.date)
 
                         val donePrevious = day.date.minusDays(1) in doneDates
                         val doneAfter = day.date.plusDays(1) in doneDates

@@ -34,6 +34,8 @@ fun HabitEntity.toHabit(): Habit {
         days = days,
         index = index,
         reminder = reminder,
+        scheduleType = scheduleType,
+        daysOfMonth = daysOfMonth,
     )
 }
 
@@ -50,6 +52,8 @@ fun Habit.toHabitEntity(): HabitEntity {
         index = index,
         days = days,
         reminder = reminder,
+        scheduleType = scheduleType,
+        daysOfMonth = daysOfMonth,
     )
 }
 

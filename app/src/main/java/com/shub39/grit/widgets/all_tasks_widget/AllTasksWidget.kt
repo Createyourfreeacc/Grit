@@ -193,7 +193,7 @@ private fun Content(
                             ),
                     )
                     Spacer(GlanceModifier.height(8.dp))
-                    taskGroup.value.forEach { task ->
+                    taskGroup.value.sortedBy { it.status }.forEach { task ->
                         val status = task.status
 
                         Column {

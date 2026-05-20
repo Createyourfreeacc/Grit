@@ -57,6 +57,7 @@ import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.minusDays
 import com.kizitonwose.calendar.core.plusDays
 import com.shub39.grit.core.habits.domain.HabitWithAnalytics
+import com.shub39.grit.core.habits.domain.matches
 import com.shub39.grit.core.habits.presentation.HabitsAction
 import com.shub39.grit.core.utils.now
 import com.shub39.grit.core.utils.toFormattedString
@@ -88,7 +89,7 @@ fun HabitCard(
     modifier: Modifier = Modifier,
 ) {
     val today = LocalDate.now()
-    val canCompleteToday = today.dayOfWeek in habitWithAnalytics.habit.days
+    val canCompleteToday = habitWithAnalytics.habit.matches(today)
 
     // animated colors
     val cardContent by
@@ -243,8 +244,7 @@ fun HabitCard(
                 dayContent = { weekDay ->
                     val done = habitWithAnalytics.statuses.any { it.date == weekDay.date }
                     val validDay =
-                        weekDay.date <= today &&
-                            weekDay.date.dayOfWeek in habitWithAnalytics.habit.days
+                        weekDay.date <= today && habitWithAnalytics.habit.matches(weekDay.date)
 
                     Box(
                         modifier =

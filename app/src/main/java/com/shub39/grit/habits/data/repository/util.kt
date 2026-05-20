@@ -34,25 +34,23 @@ import kotlinx.datetime.plus
 @OptIn(ExperimentalTime::class)
 fun countCurrentStreak(
     dates: List<LocalDate>,
-    eligibleWeekdays: Set<DayOfWeek> = DayOfWeek.entries.toSet(),
+    isScheduledOn: (LocalDate) -> Boolean = { true },
 ): Int {
     if (dates.isEmpty()) return 0
 
     val today = LocalDate.now()
-    val filteredDates = dates.filter { eligibleWeekdays.contains(it.dayOfWeek) }.sorted()
+    val filteredDates = dates.filter(isScheduledOn).sorted()
 
     if (filteredDates.isEmpty()) return 0
 
     val lastDate = filteredDates.last()
 
-    // Check if we need to account for eligible days between lastDate and today
     val daysBetween = lastDate.daysUntil(today)
     if (daysBetween > 0) {
-        // Check if there are any eligible days we missed between lastDate and today
         var hasEligibleDayMissed = false
         for (i in 1..daysBetween) {
             val checkDate = lastDate.plus(DatePeriod(days = i))
-            if (eligibleWeekdays.contains(checkDate.dayOfWeek) && checkDate < today) {
+            if (isScheduledOn(checkDate) && checkDate < today) {
                 hasEligibleDayMissed = true
                 break
             }
@@ -65,8 +63,7 @@ fun countCurrentStreak(
         val currentDate = filteredDates[i]
         val nextDate = filteredDates[i + 1]
 
-        // Check if these are consecutive eligible days
-        if (areConsecutiveEligibleDays(currentDate, nextDate, eligibleWeekdays)) {
+        if (areConsecutiveEligibleDays(currentDate, nextDate, isScheduledOn)) {
             streak++
         } else {
             break
@@ -77,11 +74,11 @@ fun countCurrentStreak(
 
 fun countBestStreak(
     dates: List<LocalDate>,
-    eligibleWeekdays: Set<DayOfWeek> = DayOfWeek.entries.toSet(),
+    isScheduledOn: (LocalDate) -> Boolean = { true },
 ): Int {
     if (dates.isEmpty()) return 0
 
-    val filteredDates = dates.filter { eligibleWeekdays.contains(it.dayOfWeek) }.sorted()
+    val filteredDates = dates.filter(isScheduledOn).sorted()
     if (filteredDates.isEmpty()) return 0
 
     var maxConsecutive = 1
@@ -91,7 +88,7 @@ fun countBestStreak(
         val previousDate = filteredDates[i - 1]
         val currentDate = filteredDates[i]
 
-        if (areConsecutiveEligibleDays(previousDate, currentDate, eligibleWeekdays)) {
+        if (areConsecutiveEligibleDays(previousDate, currentDate, isScheduledOn)) {
             currentConsecutive++
         } else {
             maxConsecutive = maxOf(maxConsecutive, currentConsecutive)
@@ -159,12 +156,11 @@ fun prepareHeatMapData(habitData: List<HabitStatus>): Map<LocalDate, Int> {
 private fun areConsecutiveEligibleDays(
     date1: LocalDate,
     date2: LocalDate,
-    eligibleWeekdays: Set<DayOfWeek>,
+    isScheduledOn: (LocalDate) -> Boolean,
 ): Boolean {
     var checkDate = date1.plus(1, DateTimeUnit.DAY)
     while (checkDate < date2) {
-        if (eligibleWeekdays.contains(checkDate.dayOfWeek)) {
-            // Found an eligible day between date1 and date2, so they're not consecutive
+        if (isScheduledOn(checkDate)) {
             return false
         }
         checkDate = checkDate.plus(1, DateTimeUnit.DAY)
