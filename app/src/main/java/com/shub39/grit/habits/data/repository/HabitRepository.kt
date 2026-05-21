@@ -31,6 +31,7 @@ import com.shub39.grit.core.habits.domain.matches
 import com.shub39.grit.core.utils.now
 import com.shub39.grit.habits.data.database.HabitStatusDao
 import com.shub39.grit.habits.data.database.HabitsDao
+import com.shub39.grit.widgets.WidgetUpdater
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +56,7 @@ class HabitRepository(
     private val habitStatusDao: HabitStatusDao,
     private val datastore: SettingsDatastore,
     private val notificationManager: GritNotificationManager,
+    private val widgetUpdater: WidgetUpdater,
 ) : HabitRepo {
 
     private val habits =
@@ -79,10 +81,12 @@ class HabitRepository(
 
     override suspend fun upsertHabit(habit: Habit) {
         habitDao.upsertHabit(habit.toHabitEntity())
+        widgetUpdater.refreshHabitWidgets()
     }
 
     override suspend fun deleteHabit(habitId: Long) {
         habitDao.deleteHabit(habitId)
+        widgetUpdater.refreshHabitWidgets()
     }
 
     override suspend fun getHabits(): List<Habit> {
@@ -163,10 +167,12 @@ class HabitRepository(
         if (habitStatus.date == LocalDate.now()) {
             notificationManager.cancelNotification(habitId = habitStatus.habitId.toInt())
         }
+        widgetUpdater.refreshHabitWidgets()
     }
 
     override suspend fun deleteHabitStatus(habitId: Long, date: LocalDate) {
         habitStatusDao.deleteStatus(habitId, date)
+        widgetUpdater.refreshHabitWidgets()
     }
 
     override suspend fun getCompletedHabitsForDate(date: LocalDate): List<Habit> {

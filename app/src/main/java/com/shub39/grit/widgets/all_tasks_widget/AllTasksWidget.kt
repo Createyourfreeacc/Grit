@@ -172,18 +172,7 @@ private fun Content(
         TitleBar(
             startIcon = ImageProvider(R.drawable.check_list),
             title = "Tasks",
-            actions = {
-                if (size.width >= WidgetSize.Width4) {
-                    Box(GlanceModifier.padding(horizontal = 16.dp)) {
-                        Image(
-                            provider = ImageProvider(R.drawable.refresh),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface),
-                            modifier = GlanceModifier.clickable { onUpdateWidget() },
-                        )
-                    }
-                }
-            },
+            actions = {},
         )
 
         LazyColumn(
@@ -233,8 +222,9 @@ private fun Content(
                                         )
                                         .padding(horizontal = 10.dp, vertical = 4.dp)
                                         .clickable {
+                                            // Repo write triggers WidgetUpdater.refreshTaskWidgets();
+                                            // no manual onUpdateWidget() needed.
                                             onUpdateTaskStatus(task)
-                                            onUpdateWidget()
                                         }
                             ) {
                                 Text(

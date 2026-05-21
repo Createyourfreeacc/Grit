@@ -229,8 +229,9 @@ private fun Content(
                                 )
                                 .padding(vertical = 8.dp)
                                 .clickable {
+                                    // Repo write triggers WidgetUpdater.refreshHabitWidgets();
+                                    // no manual onUpdateWidget() needed.
                                     onUpdateHabit(habitWithStatus)
-                                    onUpdateWidget()
                                 },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {

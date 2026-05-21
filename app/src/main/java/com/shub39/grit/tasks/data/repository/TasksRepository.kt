@@ -26,6 +26,7 @@ import com.shub39.grit.core.tasks.domain.Task
 import com.shub39.grit.core.tasks.domain.TaskRepo
 import com.shub39.grit.tasks.data.database.CategoryDao
 import com.shub39.grit.tasks.data.database.TasksDao
+import com.shub39.grit.widgets.WidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -38,6 +39,7 @@ class TasksRepository(
     private val tasksDao: TasksDao,
     private val categoryDao: CategoryDao,
     private val notificationManager: GritNotificationManager,
+    private val widgetUpdater: WidgetUpdater,
 ) : TaskRepo {
 
     private val tasksFlow =
@@ -80,6 +82,7 @@ class TasksRepository(
 
     override suspend fun updateTaskIndexById(id: Long, index: Int) {
         tasksDao.updateTaskIndexById(id, index)
+        widgetUpdater.refreshTaskWidgets()
     }
 
     override suspend fun upsertTask(task: Task) {
@@ -88,25 +91,31 @@ class TasksRepository(
         if (task.status) {
             notificationManager.cancelNotification(task)
         }
+        widgetUpdater.refreshTaskWidgets()
     }
 
     override suspend fun deleteTask(task: Task) {
         tasksDao.deleteTask(task.toTaskEntity())
+        widgetUpdater.refreshTaskWidgets()
     }
 
     override suspend fun deleteAllTasks() {
         tasksDao.deleteAllTasks()
+        widgetUpdater.refreshTaskWidgets()
     }
 
     override suspend fun upsertCategory(category: Category) {
         categoryDao.upsertCategory(category.toCategoryEntity())
+        widgetUpdater.refreshTaskWidgets()
     }
 
     override suspend fun deleteCategory(category: Category) {
         categoryDao.deleteCategory(category.toCategoryEntity())
+        widgetUpdater.refreshTaskWidgets()
     }
 
     override suspend fun deleteAllCategories() {
         categoryDao.deleteAllCategories()
+        widgetUpdater.refreshTaskWidgets()
     }
 }
