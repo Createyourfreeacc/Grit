@@ -16,31 +16,42 @@
  */
 package com.shub39.grit.widgets
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
-import androidx.glance.appwidget.updateAll
-import com.shub39.grit.widgets.all_tasks_widget.AllTasksWidget
-import com.shub39.grit.widgets.habit_overview_widget.HabitOverviewWidget
-import com.shub39.grit.widgets.habit_streak_widget.HabitStreakWidget
-import com.shub39.grit.widgets.habit_week_chart_widget.HabitWeekChartWidget
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import android.content.Intent
+import com.shub39.grit.widgets.all_tasks_widget.AllTasksWidgetReceiver
+import com.shub39.grit.widgets.habit_overview_widget.HabitOverviewWidgetReceiver
+import com.shub39.grit.widgets.habit_streak_widget.HabitStreakWidgetReceiver
+import com.shub39.grit.widgets.habit_week_chart_widget.HabitWeekChartWidgetReceiver
 import org.koin.core.annotation.Single
 
 @Single
 class WidgetUpdater(private val context: Context) {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Send the standard Android APPWIDGET_UPDATE broadcast targeted at one receiver.
+    // This is more reliable than GlanceAppWidget.updateAll(): it routes through each
+    // receiver's ComponentName explicitly, so there is no shared lookup map that can
+    // cross-contaminate widget classes under concurrent calls.
+    private fun broadcastUpdate(receiverClass: Class<*>) {
+        val component = ComponentName(context, receiverClass)
+        val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(component)
+        if (ids.isEmpty()) return
+        val intent =
+            Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+                this.component = component
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            }
+        context.sendBroadcast(intent)
+    }
 
     fun refreshTaskWidgets() {
-        scope.launch { runCatching { AllTasksWidget().updateAll(context) } }
+        runCatching { broadcastUpdate(AllTasksWidgetReceiver::class.java) }
     }
 
     fun refreshHabitWidgets() {
-        // Each in its own coroutine so a failure in one does not suppress the others.
-        scope.launch { runCatching { HabitOverviewWidget().updateAll(context) } }
-        scope.launch { runCatching { HabitStreakWidget().updateAll(context) } }
-        scope.launch { runCatching { HabitWeekChartWidget().updateAll(context) } }
+        runCatching { broadcastUpdate(HabitOverviewWidgetReceiver::class.java) }
+        runCatching { broadcastUpdate(HabitStreakWidgetReceiver::class.java) }
+        runCatching { broadcastUpdate(HabitWeekChartWidgetReceiver::class.java) }
     }
 }
